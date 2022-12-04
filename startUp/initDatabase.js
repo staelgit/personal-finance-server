@@ -1,12 +1,12 @@
 const CashAccount = require('../models/CashAccount');
 const Category = require('../models/Category');
 const Operation = require('../models/Operation');
-const User = require('../models/User');
+// const User = require('../models/User');
 
 const cashAccountsMock = require('../mock/cashAccounts.json');
 const categoriesMock = require('../mock/categories.json');
 const operationsMock = require('../mock/operations.json');
-const usersMock = require('../mock/users.json');
+// const usersMock = require('../mock/users.json');
 
 module.exports = async () => {
    const cashAccounts = await CashAccount.find();
@@ -21,10 +21,10 @@ module.exports = async () => {
    if (operations.length !== operationsMock.length) {
       await createInitialEntity(Operation, operationsMock);
    }
-   const users = await User.find();
+   /*   const users = await User.find();
    if (users.length !== usersMock.length) {
       await createInitialEntity(User, usersMock);
-   }
+   }*/
 };
 
 async function createInitialEntity(Model, data) {
