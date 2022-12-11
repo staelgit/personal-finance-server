@@ -23,7 +23,12 @@ router.post('/signUp', [
             });
          }
          const { email, password } = req.body;
+
+         console.log('email:', email);
+         console.log('password:', password);
+
          const existingUser = await User.findOne({ email });
+         console.log('existingUser:', existingUser);
 
          if (existingUser) {
             return res.status(400).json({
@@ -36,11 +41,19 @@ router.post('/signUp', [
 
          const hashedPassword = await bcrypt.hash(password, 12);
 
+         console.log('...req.body:', req.body);
+
          const newUser = await User.create({
-            name: email,
             ...req.body,
-            password: hashedPassword
+            password: hashedPassword,
+            image: `https://avatars.dicebear.com/api/avataaars/${(
+               Math.random() + 1
+            )
+               .toString(36)
+               .substring(7)}.svg`
          });
+
+         console.log('newUser:', newUser);
 
          const tokens = tokenService.generate({ _id: newUser._id });
          await tokenService.save(newUser._id, tokens.refreshToken);
@@ -48,7 +61,10 @@ router.post('/signUp', [
          res.status(201).send({ ...tokens, userId: newUser._id });
       } catch (e) {
          res.status(500).json({
-            message: 'На сервере произошла ошибка. Попробуйте позже'
+            error: {
+               message: 'На сервере произошла ошибка. Попробуйте позже',
+               code: 500
+            }
          });
       }
    }
@@ -75,7 +91,7 @@ router.post('/signInWithPassword', [
          if (!existingUser) {
             return res.status(400).send({
                error: {
-                  message: 'EMAIL_MOT_FOUND',
+                  message: 'EMAIL_NOT_FOUND',
                   code: 400
                }
             });
@@ -101,7 +117,10 @@ router.post('/signInWithPassword', [
          res.status(200).send({ ...tokens, userId: existingUser._id });
       } catch (e) {
          res.status(500).json({
-            message: 'На сервере произошла ошибка. Попробуйте позже'
+            error: {
+               message: 'На сервере произошла ошибка. Попробуйте позже',
+               code: 500
+            }
          });
       }
    }
@@ -112,10 +131,13 @@ function isTokenInvalid(data, dbToken) {
 }
 
 router.post('/token', async (req, res) => {
+   console.log('req.body:', req.body);
    try {
       const { refresh_token: refreshToken } = req.body;
       const data = tokenService.validateRefresh(refreshToken);
+      console.log('data:', data);
       const dbToken = await tokenService.findToken(refreshToken);
+      console.log('dbToken:', dbToken);
       if (isTokenInvalid(data, dbToken)) {
          return res.status(401).json({ message: 'Unauthorized' });
       }
@@ -123,6 +145,7 @@ router.post('/token', async (req, res) => {
       const tokens = await tokenService.generate({
          _id: data._id
       });
+      console.log('tokens:', tokens);
 
       await tokenService.save(data._id, tokens.refreshToken);
 
